@@ -1,0 +1,32 @@
+import praw
+from datetime import datetime
+from praw.models import MoreComments
+import datetime as DT
+
+## reddit = You will need to configure PRAW yourself
+
+## This will scrape one week's worth of comments.
+today = DT.date.today()
+week_ago = today - DT.timedelta(days=7)
+
+## Choose Subreddit
+subreddit = 'bloodborne'
+
+
+weeks_comments = []
+for submissions in reddit.subreddit(subreddit).new(limit=None):
+    parsed_date = datetime.utcfromtimestamp(submissions.created_utc)
+    if parsed_date.day in range(week_ago.day, today.day+1):
+        weeks_comments.append(submissions)
+print(len(weeks_comments))  
+    
+file_name = subreddit + 'comments.txt'
+with open(file_name, 'w+', encoding='utf-8') as f:
+    for submissions in weeks_comments:
+        submissions.comments.replace_more(limit=None)
+        comment_queue = submissions.comments[:]  # Seed with top-level
+        while comment_queue:
+            comment = comment_queue.pop(0)
+            f.write(comment.body)
+            f.write('\r\n')
+            comment_queue.extend(comment.replies)
