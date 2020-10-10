@@ -20,7 +20,14 @@ file = open(file_path, 'rt')
 text = file.read()
 file.close()
 
-wordcloud = WordCloud(max_words = 50, background_color='white').generate(text)
+
+max_words = input('Enter the maximum number of words you wish to have in the Word Cloud:\n')
+exclusion = input('Enter any words you wish to exclude (separate by a space, not case sensitive):\n')
+exclusion = exclusion.split()
+stopwords = set(STOPWORDS)
+stopwords.update(exclusion)
+
+wordcloud = WordCloud(max_words = int(max_words), background_color='white', stopwords = stopwords).generate(text)
 
 plt.imshow(wordcloud, interpolation='bilinear')
 plt.axis("off")
