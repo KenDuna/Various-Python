@@ -10,7 +10,9 @@ from PIL import Image
 from wordcloud import WordCloud, STOPWORDS, ImageColorGenerator
 
 ## If you are using my Reddit Scraper, it saves the .txt files with utf-8 encoding (this prevents errors). 
-## You will need to convert the .txt to ansi encoding to use this Word Cloud generator.
+## You will need to convert the .txt to ansi encoding to use this Word Cloud generator. This is quite easy
+## to do. Open the .txt file and choose to "Save As". You can use the same filename, but change the 
+## encoding via the dropdown menu to "ANSI".
 
 root = tk.Tk()
 root.withdraw()
