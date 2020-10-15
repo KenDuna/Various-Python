@@ -5,26 +5,30 @@ import datetime as DT
 
 ## reddit = You will need to configure PRAW yourself
 
-## Choose Subreddit
-today = DT.date.today()
-week_ago = today - DT.timedelta(days=7)
-subreddit = 'politics'
-
-weeks_posts = []
-for submissions in reddit.subreddit(subreddit).new(limit=None):
-    parsed_date = datetime.utcfromtimestamp(submissions.created_utc)
-    if week_ago <= parsed_date.date() <= today:
-        weeks_posts.append(submissions)
+## This will scrape the comments of a specific subreddit for the past num_days days. It saves them in a .txt file with utf-8 encoding.
+def scrape_subreddit_comments(subreddit, num_days):
+    today = DT.date.today()
+    start_date = today - DT.timedelta(days=num_days)
+    posts = []
+    for submissions in reddit.subreddit(subreddit).new(limit=None):
+        parsed_date = datetime.utcfromtimestamp(submissions.created_utc)
+        if start_date <= parsed_date.date() <= today:
+            posts.append(submissions)
+            
+    print('Number of posts in the past {} days to r/{}: {}'.format(num_days, subreddit, len(posts)))
         
-print('Number of posts in last week to r/{}: {}'.format(subreddit, len(weeks_posts)))
-    
-file_name = subreddit + '_comments.txt'
-with open(file_name, 'w+', encoding='utf-8') as f:
-    for submissions in weeks_posts:
-        submissions.comments.replace_more(limit=None)
-        comment_queue = submissions.comments[:]  # Seed with top-level
-        while comment_queue:
-            comment = comment_queue.pop(0)
-            f.write(comment.body)
-            f.write('\r\n')
-            comment_queue.extend(comment.replies)
+    file_name = subreddit + '_comments.txt'
+    with open(file_name, 'w+', encoding='utf-8') as f:
+        for submissions in posts:
+            submissions.comments.replace_more(limit=None)
+            comment_queue = submissions.comments[:]  # Seed with top-level
+            while comment_queue:
+                comment = comment_queue.pop(0)
+                f.write(comment.body)
+                f.write('\r\n')
+                comment_queue.extend(comment.replies)
+
+subreddit = 'politics'        ## Choose which subreddit to scrape
+num_days = 7                  ## Scrape num_days days of posts
+scrape_subreddit_comments(subreddit, num_days)
+
