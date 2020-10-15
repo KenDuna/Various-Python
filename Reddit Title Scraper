@@ -5,23 +5,24 @@ import datetime as DT
 
 ## reddit = You will have to configure PRAW yourself
 
-
-today = DT.date.today()
-week_ago = today - DT.timedelta(days=7)
-
-## Choose Subreddit
-subreddit = 'politics'
-
-weeks_posts = []
-for submissions in reddit.subreddit(subreddit).new(limit=None):
-    parsed_date = datetime.utcfromtimestamp(submissions.created_utc)
-    if week_ago <= parsed_date.date() <= today:
-        weeks_posts.append(submissions)
+def scrape_subreddit_titles(subreddit, num_days):
+    today = DT.date.today()
+    start_date = today - DT.timedelta(days=num_days)
+    posts = []
+    for submissions in reddit.subreddit(subreddit).new(limit=None):
+        parsed_date = datetime.utcfromtimestamp(submissions.created_utc)
+        if start_date <= parsed_date.date() <= today:
+            posts.append(submissions)
+            
+    print('Number of posts in last {} days to r/{}: {}'.format(num_days, subreddit, len(posts)))  
         
-print('Number of posts in last week to r/{}: {}'.format(subreddit, len(weeks_posts)))  
-    
-file_name = subreddit + '_post_titles.txt'
-with open(file_name, 'w+', encoding='utf-8') as f:
-    for submissions in weeks_posts:
-        f.write(submissions.title)
-        f.write('\r\n')
+    file_name = subreddit + '_post_titles.txt'
+    with open(file_name, 'w+', encoding='utf-8') as f:
+        for submissions in posts:
+            f.write(submissions.title)
+            f.write('\r\n')
+
+
+subreddit = 'politics'        ## Choose which subreddit to scrape
+num_days = 7                  ## Scrape num_days days of posts
+scrape_subreddit_titles(subreddit, num_days)
