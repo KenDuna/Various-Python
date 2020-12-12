@@ -84,7 +84,7 @@ class Graph(object):
         return A
     
     def laplacian(self):
-        A = self.adjacency_matrix()
+        A = -self.adjacency_matrix()
         verts = self.vertices()
         for i in range(len(verts)):
             A[i][i] = self.degree(verts[i])
