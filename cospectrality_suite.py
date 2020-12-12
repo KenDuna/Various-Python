@@ -1,6 +1,4 @@
 import numpy as np
-import re
-from itertools import combinations
 
 ### R(x) and N(n) are used for Graph6 encoding.
 
