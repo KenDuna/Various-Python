@@ -1,4 +1,6 @@
 import numpy as np
+import re
+from itertools import combinations
 
 ### R(x) and N(n) are used for Graph6 encoding.
 
@@ -69,7 +71,8 @@ class Graph(object):
     
     def degree(self, vertex):
         return len(self.__graph_dict[vertex])
-    
+
+    #### Matrices associated to graphs.    
     def adjacency_matrix(self):
         verts = self.vertices()
         n = len(verts)
@@ -139,6 +142,7 @@ class Graph(object):
             DL[i][i] = -sum(DL[i])
         return DL
     
+    ### Graph6 Encoding (see Brendan McKay's website for details. McKay also has a lot of great graph data.)
     def graph6_string(self):
         verts = self.vertices()
         n = len(verts)
@@ -151,7 +155,8 @@ class Graph(object):
                     x = x + '0'
         return ''.join(list(map(chr,N(n) + R(x))))
     
-    def add_vertex(self, vertex):
+    ### These functions will alter the graph or produce a new related graph.
+    def add_vertex(self, vertex, output=False):
         ''' If the vertex "vertex" is not in 
             self.__graph_dict, a key "vertex" with an empty
             list as a value is added to the dictionary. 
@@ -159,8 +164,19 @@ class Graph(object):
         '''
         if vertex not in self.__graph_dict:
             self.__graph_dict[vertex] = []
-
-    def add_edge(self, edge):
+        if output:
+            return self
+        
+    def delete_vertex(self, vertex, output=False):
+        assert vertex in self.vertices(), f'{vertex} is not a vertex of {self}'
+        self.__graph_dict.pop(vertex, None)
+        for v in self.vertices():
+            if vertex in self.__graph_dict[v]:
+                self.__graph_dict[v].remove(vertex)
+        if output:
+            return self
+    
+    def add_edge(self, edge, output=False):
         ''' assumes that edge is of type set, tuple or list; 
             between two vertices can be multiple edges! 
         '''
@@ -170,7 +186,36 @@ class Graph(object):
             self.__graph_dict[vertex1].append(vertex2)
         else:
             self.__graph_dict[vertex1] = [vertex2]
-
+        if output:
+            return self
+        
+    def delete_edge(self, edge, output=False):
+        assert edge in self.edges(), f'{edge} is not an edge of {self}'
+        verts = list(edge)
+        self.__graph_dict[verts[0]].remove(verts[1])
+        self.__graph_dict[verts[1]].remove(verts[0])
+        if output:
+            return self
+        
+    def contract_edge(self, edge, output=False):
+        assert edge in self.edges(), f'{edge} is not an edge of {self}'
+        verts = list(edge)
+        self.__graph_dict[verts[0]] = self.__graph_dict[verts[0]] + self.__graph_dict[verts[1]]
+        self.__graph_dict[verts[0]].remove(verts[0])
+        self.__graph_dict[verts[0]].remove(verts[1])
+        self.delete_vertex(verts[1])
+        if output:
+            return self
+    
+    def complement(self):
+        complement_dict = {k: [] for k in self.vertices()}
+        for k in self.vertices():
+            for i in range(self.order()):
+                if i != k and i not in self.__graph_dict[k]:
+                    complement_dict[k].append(i)
+        return Graph(complement_dict)
+    
+    #### 
     def __generate_edges(self):
         ''' A static method generating the edges of the 
             graph "graph". Edges are represented as sets 
@@ -183,7 +228,7 @@ class Graph(object):
                 if {neighbour, vertex} not in edges:
                     edges.append({vertex, neighbour})
         return edges
-
+    
     def __str__(self):
         res = "vertices: "
         for k in self.__graph_dict:
@@ -223,12 +268,13 @@ def graph6_to_graph(graph6):
                 counter+=1
     return graph_dict
 
-## graphs = list of graph6 strings to be tested.
-## func = matrix function. I.e. adjacency matrix, laplacian matrix, etc... Default = Adjacency matrix
-## Make sure all inputs have same number of vertices.
-## Current options for func: Graph.adjacency_matrix, Graph.laplacian, Graph.distance_matrix, Graph.distance_laplacian
+
 
 def cospectral_collection(graphs, func=Graph.adjacency_matrix):
+    ## graphs = list of graph6 strings to be tested.
+    ## func = matrix function. I.e. adjacency matrix, laplacian matrix, etc... Default = Adjacency matrix
+    ## Make sure all inputs have same number of vertices.
+    ## Current options for func: Graph.adjacency_matrix, Graph.laplacian, Graph.distance_matrix, Graph.distance_laplacian
     matrix_dict = {}
     
     for graph in graphs:
